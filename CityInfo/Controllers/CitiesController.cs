@@ -17,7 +17,8 @@ namespace CityInfo.Controllers
                 new List<object>()
                 {
                     new {id = 1, Name = "Denver"},
-                    new {id = 2, Name = "Arvada" }
+                    new {id = 2, Name = "Arvada" },
+                    new {id = 3, Name = "Boulder" }
                 });
         }
     }
