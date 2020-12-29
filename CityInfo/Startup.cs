@@ -1,3 +1,4 @@
+using CityInfo.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -30,23 +31,27 @@ namespace CityInfo
             services
                 .AddMvc()
                 .AddNewtonsoftJson();
-                /*
-                .AddMvcOptions(o =>
+            /*
+            .AddMvcOptions(o =>
+            {
+                o.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+            });
+            */
+            /* .AddJsonOptions(o =>
+            {
+                if(o.SerializerSettings.ContractResolver != null)
                 {
-                    o.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
-                });
-                */
-                /* .AddJsonOptions(o =>
-                {
-                    if(o.SerializerSettings.ContractResolver != null)
-                    {
-                        var castedResolver = o.SerializerSettings.ContractResolver
-                                                as DefaultContractResolver;
-                        castedResolver.NamingStrategy = null;
-                    }
-                });
-                */
-
+                    var castedResolver = o.SerializerSettings.ContractResolver
+                                            as DefaultContractResolver;
+                    castedResolver.NamingStrategy = null;
+                }
+            });
+            */
+#if DEBUG
+            services.AddTransient<IMailService, LocalMailService>();
+#else
+            services.AddTransient<IMailService, CloudMailService>();
+#endif
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
