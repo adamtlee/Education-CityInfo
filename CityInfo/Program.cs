@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog.Web;
+using Microsoft.Extensions.DependencyInjection;
+using CityInfo.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace CityInfo
 {
@@ -20,7 +23,26 @@ namespace CityInfo
             try
             {   
                 logger.Info("Initializing application");
-                CreateHostBuilder(args).Build().Run();
+                var host = CreateHostBuilder(args).Build();
+
+                using (var scope = host.Services.CreateScope())
+                {
+                    try
+                    {
+                        var context = scope.ServiceProvider.GetService<CityInfoContext>();
+
+                        // For Demo purposes only I would never delete a db in production (hopefully not)
+                        context.Database.EnsureDeleted();
+                        context.Database.Migrate();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e, "An error occured while migrating the database");
+                    }
+                }
+
+                // Run the application
+                host.Run();
             }
             catch (Exception e)
             {
