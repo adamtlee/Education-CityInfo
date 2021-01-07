@@ -16,34 +16,80 @@ namespace CityInfo.Controllers
     {
         private readonly ILogger<PointsOfInterestController> _logger;
         private readonly IMailService _mailService;
+        private readonly ICityInfoRepository _cityInfoRepository;
 
-        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService)
+        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService, ICityInfoRepository cityInfoRepository)
         {
-            _logger = logger ?? throw new ArgumentException(nameof(logger));
-            _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+            _logger = logger ?? 
+                throw new ArgumentException(nameof(logger));
+            _mailService = mailService ?? 
+                throw new ArgumentNullException(nameof(mailService));
+            _cityInfoRepository = cityInfoRepository ??
+                throw new ArgumentException(nameof(cityInfoRepository));
+
         }
-        [HttpGet("{id}", Name = "GetPointOfInterest")]
-        public IActionResult GetPointsOfInterest(int cityId, int id)
+
+        // [HttpGet("{id}", Name = "GetPointOfInterest")]
+        // public IActionResult GetPointsOfInterest(int cityId, int id)
+        [HttpGet]
+        public IActionResult GetPointsOfInterest(int cityId)
         {
             try
             {
                 // Test: throw new Exception("Exception example. ");
-                var city = CitiesDataStore.Current.Cities
-               .FirstOrDefault(c => c.Id == cityId);
 
-                if (city == null)
+                if (!_cityInfoRepository.CityExists(cityId))
                 {
-                    _logger.LogInformation($"City with id {cityId} wasn't found when accessing points of interest.");
+                    _logger.LogInformation($"City with id {cityId} wasn't found when" +
+                        $" accessing point of interest.");
                     return NotFound();
                 }
 
-                return Ok(city.PointsOfInterest);
+                var pointsOfInterestForCity = _cityInfoRepository.GetPointsOfInterestForCity(cityId);
+
+                var pointsOfInterestForCityResults = new List<PointOfInterestDto>();
+                foreach (var poi in pointsOfInterestForCity)
+                {
+                    pointsOfInterestForCityResults.Add(new PointOfInterestDto()
+                    {
+                        Id = poi.Id,
+                        Name = poi.Name,
+                        Description = poi.Description
+                    });
+                }
+
+                return Ok(pointsOfInterestForCityResults);
             }
             catch (Exception e)
             {
                 _logger.LogCritical($"Exception while getting points of interest for city with id {cityId}.", e);
                 return StatusCode(500, "A Problem happened while handling your request");
             }
+        }
+
+        [HttpGet("{id}", Name = "GetPointOfInterest")]
+        public IActionResult GetPointsOfInterest(int cityId, int id)
+        {
+            if (!_cityInfoRepository.CityExists(cityId))
+            {
+                return NotFound();
+            }
+
+            var pointOfInterest = _cityInfoRepository.GetPointOfInterestForCity(cityId, id);
+
+            if (pointOfInterest == null)
+            {
+                return NotFound();
+            }
+
+            var pointOfInterestResult = new PointOfInterestDto()
+            {
+                Id = pointOfInterest.Id,
+                Name = pointOfInterest.Name,
+                Description = pointOfInterest.Description
+            };
+
+            return Ok(pointOfInterestResult);
         }
 
         [HttpPost]
