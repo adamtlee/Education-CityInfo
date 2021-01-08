@@ -60,6 +60,11 @@ namespace CityInfo.Services
 
         }
 
+        public void DeletePointOfInterest(PointOfInterest pointOfInterest)
+        {
+            _context.PointsOfInterest.Remove(pointOfInterest);
+        }
+
         public bool Save()
         {
             return (_context.SaveChanges() >= 0);
